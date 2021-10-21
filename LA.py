@@ -4,7 +4,96 @@ import unittest
 Vector = List[float]
 Matrix = List[Vector]
 
-#Problem 00
+def absoluteValue(scalar: float) -> float:
+    """
+    Calculates the absolute value of a scalar. Also works on complex numbers.
+    Uses Python's builtin abs() function which gives the absolute value for normal
+    floats, and returns the magnitude in the case of complex numbers.
+
+    Args: 
+    scalar: A floating point or complex number
+
+    Returns:
+    Floating point number representing the absolute value of the scalar, or
+    the magnitude of a complex number.
+
+    """ 
+    return abs(scalar)
+
+def pNorm(v1 : Vector, scalar:float=2) -> float:
+    """
+    Calculates the pNorm of a vector. Defaults to p = 2 if scalar value is not provided.
+    Uses the formula: pNorm = (Sum(abs(entryOfVector)^scalar))^1/scalar.
+
+    Args:
+    v1: A Vector stored as a list.
+    scalar: A floating point number. Defaults to 2 if none is provided.
+
+    Returns:
+    Floating point number representing the pNorm of v1.
+    
+    """
+    total = 0
+    for entry in v1:
+        total += (abs(entry))**scalar
+    return total**(1/scalar)
+
+
+def infNorm(v1:Vector)->float:
+    """
+    Calculates the infinite Norm of v1. If we consider each entry of a vector to be
+    its absolute value, then this turns out to be the maximum of those entries.
+
+    Args:
+    v1: Vector stored as a list.
+
+    Returns:
+    A float representing the infinite Norm of v1.
+    """
+    return abs(max(v1,key=lambda x: abs(x)))
+
+
+def pNormOrInf(v1: Vector,scalar:float=2,infinite:bool=False)->float:
+    """
+    Chooses between the pNorm of Infinite Norm using a boolean value.
+    Defaults to False -> returns the pNorm.
+
+    Args:
+    v1: Vector stored as a list.
+    scalar: Float defaults to 2 if none is supplied.
+    infinite: Boolean to decide to calculate infinite norm. Defaults to False.
+
+    Returns:
+    Returns a floating point number representing the infinite norm if infinite==True.
+    Else returns a floating point number representing the pNorm of v1 with p=scalar.
+    
+    """
+    if infinite:
+        return infNorm(v1)
+    else:
+        return pNorm(v1,scalar)
+
+def innerProduct(v1:Vector,v2:Vector)->float:
+    """
+    Calculates the inner product of v1 and v2. Simply sums together the multiplication
+    of each corresponding entry of v1 and v2.
+
+    Args:
+    v1: A vector stored as a List.
+    v2: A vector stored as a List.
+    Both v1 and v2 must have the same size.
+
+    Returns:
+    Returns a float which represents the inner product (dot product) of
+    v1 and v2.
+    
+    """
+    sum = 0
+    for i in range(len(v1)):
+        sum += v1[i]*v2[i]
+    return sum
+
+
 def add_vectors(vector_a: Vector,vector_b: Vector) -> Vector:
     """Adds the two input vectors.
 
@@ -25,10 +114,7 @@ def add_vectors(vector_a: Vector,vector_b: Vector) -> Vector:
         result[index] = vector_a[index] + vector_b[index]
     return result
 
-#End Example
 
-
-#Problem 01
 def scalar_vector(vector_a : Vector,n: int) -> Vector:
     """
     Performs scalar vector multiplication.
@@ -48,7 +134,6 @@ def scalar_vector(vector_a : Vector,n: int) -> Vector:
         returnList.append(i*n)
     return returnList
 
-#Problem 02
 def scalar_matrix_mult(matrix_a: Matrix,n: int) -> Matrix:
     """
     Performs scalar matrix multiplication.
@@ -68,7 +153,6 @@ def scalar_matrix_mult(matrix_a: Matrix,n: int) -> Matrix:
         returnMatrix.append(scalar_vector(i,n))
     return returnMatrix
 
-#Problem 03
 def add_matrix(matrix_a: Matrix,matrix_b: Matrix) -> Matrix:
     """
     Adds the two input matricies.
@@ -89,7 +173,6 @@ def add_matrix(matrix_a: Matrix,matrix_b: Matrix) -> Matrix:
         returnMatrix.append(tempRow)
     return returnMatrix
 
-#Problem 04
 def matrix_vector_mult(matrix_a: Matrix,vector_a: Vector) -> Vector:
     """
     Performs matrix vector multiplication.
@@ -117,7 +200,6 @@ def matrix_vector_mult(matrix_a: Matrix,vector_a: Vector) -> Vector:
         tempList[i+1] = add_vectors(tempList[i],tempList[i+1])
     return tempList[-1]
 
-#Problem 05
 def matrix_matrix_mult(matrix_a: Matrix,matrix_b: Matrix) -> Matrix:
     """
     Performs matrix matrix multiplication.
@@ -145,6 +227,7 @@ matrix2 = [[6,8,4],[3,5,1],[7,2,9]]
 matrix3 = [[4,5,6],[3,5,8],[2,4,1]]
 test_vector_01 = [1, 2, 4]
 test_vector_02 = [3, 1, 2]
+test_vector_03 = [6,complex(3,2),7]
 n = 9
 
 class TestVectorOperations(unittest.TestCase):
@@ -171,6 +254,27 @@ class TestVectorOperations(unittest.TestCase):
     def test_matrixMatrixMult(self):
         self.assertEqual(matrix_matrix_mult(matrix1,matrix2),[[66, 84, 102], [30, 39, 48], [78, 96, 114]])
         self.assertEqual(matrix_matrix_mult(matrix1,matrix3),[[66, 81, 96], [79, 95, 111], [25, 32, 39]])
+
+    def test_absoluteValue(self):
+        self.assertEqual(absoluteValue(-3),3)
+        self.assertAlmostEqual(absoluteValue(complex(3,2)),13**(1/2))
+
+    def test_pNorm(self):
+        self.assertAlmostEqual(pNorm(test_vector_01,3),73**(1/3))
+        self.assertAlmostEqual(pNorm(test_vector_01),21**(1/2))
+
+    def test_infNorm(self):
+        self.assertEqual(infNorm(test_vector_01),4)
+        self.assertEqual(infNorm(test_vector_02),3)
+
+    def test_pNormOrInf(self):
+        self.assertEqual(pNormOrInf(test_vector_01,infinite=True),4)
+        self.assertAlmostEqual(pNormOrInf(test_vector_01),21**(1/2))
+
+    def test_innerProduct(self):
+        self.assertEqual(innerProduct(test_vector_01,test_vector_02),13)
+        self.assertEqual(innerProduct(test_vector_01,test_vector_03),complex(40,4))
+
 
 
 if __name__ == '__main__':
