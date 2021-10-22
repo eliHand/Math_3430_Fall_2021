@@ -7,8 +7,9 @@ Matrix = List[Vector]
 def absoluteValue(scalar: float) -> float:
     """
     Calculates the absolute value of a scalar. Also works on complex numbers.
-    Uses Python's builtin abs() function which gives the absolute value for normal
-    floats, and returns the magnitude in the case of complex numbers.
+    Uses the fact that the sqrt(real^2 + imag^2) == magnitude a.k.a the absolute value
+    of complex numbers. Also uses the alternative definition of absolute value for real
+    values sqrt(number^2). The positive solution is exactly the absolute value.
 
     Args: 
     scalar: A floating point or complex number
@@ -18,7 +19,10 @@ def absoluteValue(scalar: float) -> float:
     the magnitude of a complex number.
 
     """ 
-    return abs(scalar)
+    if (type(scalar) == type(complex())):
+        return ((scalar.real)**2 + (scalar.imag)**2)**(1/2)
+    else:
+        return (scalar**2)**(1/2)
 
 def pNorm(v1 : Vector, scalar:float=2) -> float:
     """
@@ -35,7 +39,7 @@ def pNorm(v1 : Vector, scalar:float=2) -> float:
     """
     total = 0
     for entry in v1:
-        total += (abs(entry))**scalar
+        total += (absoluteValue(entry))**scalar
     return total**(1/scalar)
 
 
@@ -50,7 +54,7 @@ def infNorm(v1:Vector)->float:
     Returns:
     A float representing the infinite Norm of v1.
     """
-    return abs(max(v1,key=lambda x: abs(x)))
+    return absoluteValue(max(v1,key=lambda x: absoluteValue(x)))
 
 
 def pNormOrInf(v1: Vector,scalar:float=2,infinite:bool=False)->float:
