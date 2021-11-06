@@ -72,34 +72,6 @@ def transpose(m:Matrix)->Matrix:
     return returnMatrix
 
 
-def GramSchmidtUnstable(m:Matrix)->List:
-    '''
-    Implements the unstable version of the Gram-Schmidt Algorithm for calculating the
-    Q-R Decomposition of a matrix. 
-
-    Input: A matrix m which is a list of lists.
-
-    Output: Outputs a list containing two items. First Entry is Q in the Q-R Decomposition.
-    The second is R, an upper triangular matrix from the Decomposition.
-    '''
-    Q = []
-    sum = [0 for i in range(len(m))]
-    for k in range(len(m)):
-        for j in range(0,k):
-            sum = add_vectors(projection(Q[j],m[k]),sum)
-        addInverse(sum)
-        Q.append(add_vectors(m[k],sum))
-        sum = [0 for i in range(len(m))]
-    # Normalize Q
-    for i in range(len(Q)):
-        tempLen = pNorm(Q[i])
-        for j in range(len(Q[i])):
-            Q[i][j] = Q[i][j]/tempLen
-    # Calculate R
-    transposeOrthog = transpose(Q)
-    R = matrix_matrix_mult(transposeOrthog,m)
-    returnList = [Q,R]
-    return returnList
 
 def GramSchmidtStable(m:Matrix)->List:
     '''
@@ -131,11 +103,27 @@ def GramSchmidtStable(m:Matrix)->List:
     returnList = [Q,R]
     return returnList
 
+def orthoNormalizeVectors(m:Matrix)->Matrix:
+    '''
+    This function will be supplied a list of vectors (a matrix), then will perform
+    the Gram-Schmidt process, and will return Q from that process, which will be an
+    orthonormal list of vectors which share the same span as those from the input matrix.
+
+    Input:
+        m: A matrix of vectors stored as a list of lists.
+
+    Returns:
+        Returns a Matrix containing vectors on the same span as the matrix m but
+        orthonormalized.
+    '''
+    holder = GramSchmidtStable(m)
+    return holder[0]
 
 matrix1 = [[1,2,3],[4,5,6],[7,8,9]]
 matrix2OLD = [[6,8,4],[3,5,1],[7,2,9]]
 matrix2 = [[1,2,3],[4,5,6],[7,2,9]]
 matrix3 = [[4,5,6],[3,5,8],[2,4,1]]
+matrixCJ = [[1,2,3],[4,5,6]]
 test_vector_01 = [1, 2, 4]
 test_vector_02 = [3, 1, 2]
 test_vector_03 = [6,complex(3,2),7]
@@ -156,18 +144,14 @@ class TestQR(unittest.TestCase):
     def test_transpose(self):
         self.assertEqual(transpose(matrix1),[[1,4,7],[2,5,8],[3,6,9]])
 
-    def test_GramSchmidtUnstable(self):
-        QR = GramSchmidtUnstable(matrix2)
+    def test_orthoNormalizeVectors(self):
+        Q = orthoNormalizeVectors(matrix2)
         SolutionQ = [[14**(.5)/14,14**(.5)/7,3*14**(.5)/14],\
                 [4*21**(.5)/21,21**(.5)/21,-2*21**(.5)/21],\
                 [6**(.5)/6,-1*6**(.5)/3,6**(.5)/6]]
-        SolutionR = [[14**(.5),0,0],[(16*14**(.5))/7,(3*21**(.5))/7,0],[(19*14**(.5))/7,(4*21**(.5))/7,2*6**(.5)]]
-        for vector in range(len(QR[0])):
-            for item in range(len(QR[0][vector])):
-                self.assertAlmostEqual(QR[0][vector][item],SolutionQ[vector][item])
-        for vector in range(len(QR[1])):
-            for item in range(len(QR[1][vector])):
-                self.assertAlmostEqual(QR[1][vector][item],SolutionR[vector][item])
+        for vector in range(len(Q)):
+            for item in range(len(Q[vector])):
+                self.assertAlmostEqual(Q[vector][item],SolutionQ[vector][item])
 
     def test_GramSchmidtStable(self):
         QR = GramSchmidtStable(matrix2)
@@ -185,9 +169,11 @@ class TestQR(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    a = GramSchmidtStable(matrix2)
-    b = GramSchmidtUnstable(matrix2)
-    print(matrix_matrix_mult(a[0],a[1]))
-    print(matrix_matrix_mult(b[0],b[1]))
+    #a = GramSchmidtStable(matrix2)
+    #b = GramSchmidtUnstable(matrix2)
+    #print(matrix_matrix_mult(a[0],a[1]))
+    #print(matrix_matrix_mult(b[0],b[1]))
+    #c = GramSchmidtStable(matrixCJ)
+    #print(c[0])
     unittest.main()
     
