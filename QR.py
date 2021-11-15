@@ -119,6 +119,97 @@ def orthoNormalizeVectors(m:Matrix)->Matrix:
     holder = GramSchmidtStable(m)
     return holder[0]
 
+def copyMatrix(m:Matrix)->Matrix:
+    temp = createEmptyMatrix(m)
+    for i in range(len(m)):
+        for j in range(len(m[i])):
+            temp[i][j] = m[i][j]
+    return temp
+
+
+
+def makeColumn(v:Vector,n:int)->Vector:
+    temp = []
+    for i in v:
+        temp.append(0)
+    temp[n] = 1
+    return temp
+
+def reconstructMatrix(matrixToReconstruct:Matrix,BaseMatrix:Matrix)->Matrix:
+    '''
+    1 2     1 0 0    1 0 0 0
+    3 4 ->  0 1 2 -> 0 1 0 0
+            0 3 4    0 0 1 2
+                     0 0 3 4
+    '''
+    copyMatrixToReconstruct = copyMatrix(matrixToReconstruct)
+    while len(BaseMatrix) > len(copyMatrixToReconstruct):
+        for i in copyMatrixToReconstruct:
+            i.insert(0,0)
+        tempCol = makeColumn(copyMatrixToReconstruct[0],0)
+        copyMatrixToReconstruct.insert(0,tempCol)
+    return copyMatrixToReconstruct
+    
+
+def makeIdentMatrix(m:Matrix)->Matrix:
+    tempMatrix = createEmptyMatrix(m)
+    for i in range(len(m)):
+        for j in range(len(m[i])):
+            if (i==j):
+                tempMatrix[i][j] = 1
+            else:
+                tempMatrix[i][j] = 0
+    return tempMatrix
+
+def makeSubMatrix(m:Matrix)->Matrix:
+    '''
+    1 4 7    5 8
+    2 5 8 -> 6 9 -> 9
+    3 6 9
+    '''
+    temp = copyMatrix(m)
+    temp.pop(0)
+    for i in temp:
+        i.pop(0)
+    return temp
+
+def houseHolderCalc(m:Matrix, n:int)->Matrix:
+    x = m[n] # First column of m
+    normX = pNorm(x)
+    inverseX = scalar_vector(x,-1)
+    e = makeColumn(x,n)
+    v = add_vectors((scalar_vector(e,normX)),inverseX)
+    # Now we calculate F
+    numerator = []
+    for entry in v:
+        column = scalar_vector(v,entry)
+        numerator.append(column)
+    deno = 2/innerProduct(v,v)
+    temp = scalar_matrix_mult(numerator,deno)
+    ident = makeIdentMatrix(m)
+    temp = scalar_matrix_mult(temp,-1)
+    F = add_matrix(temp,ident)
+    return F
+
+def houseHolderDriver(m:Matrix)->Matrix:
+    index = 2
+    tempMatrix = []
+    firstIteration = matrix_matrix_mult(houseHolderCalc(m,0),m)
+    while index < len(firstIteration):
+        tempMatrix = makeSubMatrix(firstIteration)
+        tempMatrix = houseHolderCalc(tempMatrix,0)
+        reconstructed = reconstructMatrix(tempMatrix,m)
+        firstIteration = matrix_matrix_mult(reconstructed,firstIteration)
+        index += 1 
+    return firstIteration
+
+
+matrixNotes = [[2,2,1],[-2,1,2],[1,3,1]]
+matrixTest = [[1,2],[3,4]]
+
+
+
+
 matrix1 = [[1,2,3],[4,5,6],[7,8,9]]
 matrix2OLD = [[6,8,4],[3,5,1],[7,2,9]]
 matrix2 = [[1,2,3],[4,5,6],[7,2,9]]
@@ -169,11 +260,5 @@ class TestQR(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    #a = GramSchmidtStable(matrix2)
-    #b = GramSchmidtUnstable(matrix2)
-    #print(matrix_matrix_mult(a[0],a[1]))
-    #print(matrix_matrix_mult(b[0],b[1]))
-    #c = GramSchmidtStable(matrixCJ)
-    #print(c[0])
     unittest.main()
     
