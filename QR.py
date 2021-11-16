@@ -120,6 +120,18 @@ def orthoNormalizeVectors(m:Matrix)->Matrix:
     return holder[0]
 
 def copyMatrix(m:Matrix)->Matrix:
+    '''
+    This function takes in a matrix m, and iterates entry
+    by entry, copying it without reference to a new matrix
+    which it then returns.
+
+    Args:
+        m: A matrix of vectors stored as list of lists
+
+    Returns:
+        Returns a matrix with the same entries as m without
+        reference to them.
+    '''
     temp = createEmptyMatrix(m)
     for i in range(len(m)):
         for j in range(len(m[i])):
@@ -129,6 +141,17 @@ def copyMatrix(m:Matrix)->Matrix:
 
 
 def makeColumn(v:Vector,n:int)->Vector:
+    '''
+    Creates a column vector of size v filled with 0's with n denoting
+    the location of a 1. Then returns this vector.
+
+    Args:
+        v: A vector v stored as list
+        n: An integer denoting where a 1 will be inserted into the new vector
+    
+    Returns
+        Returns a vector composed of a 1 at position n and 0s everywhere else
+    '''
     temp = []
     for i in v:
         temp.append(0)
@@ -137,10 +160,22 @@ def makeColumn(v:Vector,n:int)->Vector:
 
 def reconstructMatrix(matrixToReconstruct:Matrix,BaseMatrix:Matrix)->Matrix:
     '''
+    Reconstructs matrixToReconstruct to the same size as BaseMatrix
+    with an "identity shell" as outlined below.
+
     1 2     1 0 0    1 0 0 0
     3 4 ->  0 1 2 -> 0 1 0 0
             0 3 4    0 0 1 2
                      0 0 3 4
+
+    Args:
+        matrixToReconstruct: A matrix stored as a list of lists
+        BaseMatrix: A matrix stored as a list of lists
+
+    Returns:
+        Returns a matrix with an inner part as matrixToReconstruct and 
+        the size BaseMatrix with an "identity shell" to make up the size
+        difference.
     '''
     copyMatrixToReconstruct = copyMatrix(matrixToReconstruct)
     while len(BaseMatrix) > len(copyMatrixToReconstruct):
@@ -152,6 +187,15 @@ def reconstructMatrix(matrixToReconstruct:Matrix,BaseMatrix:Matrix)->Matrix:
     
 
 def makeIdentMatrix(m:Matrix)->Matrix:
+    '''
+    Creates an identity matrix the same size as m.
+
+    Args:
+        m: A matrix stored as a list of lists
+
+    Returns:
+        Returns an identity matrix of the same size a m.
+    '''
     tempMatrix = createEmptyMatrix(m)
     for i in range(len(m)):
         for j in range(len(m[i])):
@@ -163,9 +207,18 @@ def makeIdentMatrix(m:Matrix)->Matrix:
 
 def makeSubMatrix(m:Matrix)->Matrix:
     '''
+    Creates a submatrix out of m that slices off the first row
+    and column of m. As outlined as below.
+
     1 4 7    5 8
     2 5 8 -> 6 9 -> 9
     3 6 9
+
+    Args:
+        m: A matrix stored as a list of lists.
+
+    Returns:
+        Returns the sliced matrix.
     '''
     temp = copyMatrix(m)
     temp.pop(0)
@@ -174,6 +227,17 @@ def makeSubMatrix(m:Matrix)->Matrix:
     return temp
 
 def houseHolderCalc(m:Matrix, n:int)->Matrix:
+    '''
+    Calculates the householder transformation matrix for m, Matrix.
+    Is created by the formula outlined in class.
+
+    Args:
+        m: A matrix stored as a list of lists.
+        n: An integer n (Should be set to 0 always)
+
+    Returns:
+        Returns the householder transformation matrix for m.
+    '''
     x = m[n] # First column of m
     normX = pNorm(x)
     inverseX = scalar_vector(x,-1)
@@ -192,6 +256,17 @@ def houseHolderCalc(m:Matrix, n:int)->Matrix:
     return F
 
 def houseHolderDriver(m:Matrix)->Matrix:
+    '''
+    Drives the houseHolderCalc function. Basically slices and constructs the matricies
+    to form each transformation matrix and multiplies it with m for the next iteration.
+    Continues until the slices make a 2x2 matrix (the smallest that is useful)
+
+    Args:
+        m: A matrix, a list of lists
+    
+    Returns:
+        Returns the transformed matrix from m. Will be upper-triangular.
+    '''
     index = 2
     tempMatrix = []
     firstIteration = matrix_matrix_mult(houseHolderCalc(m,0),m)
@@ -206,8 +281,6 @@ def houseHolderDriver(m:Matrix)->Matrix:
 
 matrixNotes = [[2,2,1],[-2,1,2],[1,3,1]]
 matrixTest = [[1,2],[3,4]]
-
-
 
 
 matrix1 = [[1,2,3],[4,5,6],[7,8,9]]
@@ -256,6 +329,30 @@ class TestQR(unittest.TestCase):
         for vector in range(len(QR[1])):
             for item in range(len(QR[1][vector])):
                 self.assertAlmostEqual(QR[1][vector][item],SolutionR[vector][item])
+
+    def test_copyMatrix(self):
+        self.assertEqual(matrix1,copyMatrix(matrix1))
+
+    def test_makeColumn(self):
+        self.assertEqual(makeColumn(test_vector_01,0),[1,0,0])
+
+    def test_reconstructMatrix(self):
+        self.assertEqual(reconstructMatrix(matrixTest,matrix1),[[1,0,0],[0,1,2],[0,3,4]])
+
+    def test_makeIdentMatrix(self):
+        self.assertEqual(makeIdentMatrix(matrix1),[[1,0,0],[0,1,0],[0,0,1]])
+
+    def test_makeSubMatrix(self):
+        self.assertEqual(makeSubMatrix(matrix1),[[5,6],[8,9]])
+
+    def test_houseHolderCalc(self):
+        self.assertAlmostEqual(houseHolderCalc(matrixNotes,0),[[0.6666666666666667, 0.6666666666666666, 0.3333333333333333],\
+             [0.6666666666666666, -0.33333333333333326, -0.6666666666666666],\
+             [0.3333333333333333, -0.6666666666666666, 0.6666666666666667]])
+
+    def test_houseHolderDriver(self):
+        self.assertAlmostEqual(houseHolderDriver(matrixNotes),[[3.0000000000000004, -1.1102230246251564e-16, 1.1102230246251565e-16],\
+             [-2.220446049250313e-16, 3.0, 0.0], [3.0000000000000004, 0.9999999999999997, -1.0]])
 
 
 
