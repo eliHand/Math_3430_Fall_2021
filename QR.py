@@ -22,20 +22,23 @@ def projection(vectorU:Vector,vectorV:Vector)->Vector:
     quotient = numerator/denominator
     return scalar_vector(vectorU,quotient)
 
-def addInverse(vectorA:Vector):
+def almostProjection(vectorU:Vector,vectorV:Vector)->float:
     '''
-    Converts vectorA in place with each entry equal to
-    its additive inverse.
+    Does the "projection formula" ((v.u1)/(u1.u1))*u1 without the final
+    multiplication of Un.
 
     Args:
-    vectorA: A vector stored as a list. Will be mutated so each entry
-    is the additive inverse.
-
+    vectorU: The spanning vector, stored as a List
+    vectorV: The vector that is being projected. Stored as a List.
+    
     Returns:
-    None
+    Returns a float that is the result of the inner products ratioed together.
+    Essentially the projection function without the final scalar_vector call.    
     '''
-    for i in range(len(vectorA)):
-        vectorA[i] = -vectorA[i]
+    numerator = innerProduct(vectorU,vectorV)
+    denominator = innerProduct(vectorU,vectorU)
+    quotient = numerator/denominator
+    return quotient
 
 def createEmptyMatrix(m:Matrix)->Matrix:
     '''
@@ -95,7 +98,7 @@ def GramSchmidtStable(m:Matrix)->List:
         Q.append(tempVect)
         for k in range(j+1,len(V)):
             temp = projection(Q[j],V[k])
-            addInverse(temp)
+            temp = scalar_vector(temp,-1)
             V[k] = add_vectors(V[k],temp)
     # At this point, Q is now a set of orthonormal vectors.
     transposeOrthog = transpose(Q)
@@ -255,107 +258,40 @@ def houseHolderCalc(m:Matrix, n:int)->Matrix:
     F = add_matrix(temp,ident)
     return F
 
-def houseHolderDriver(m:Matrix)->Matrix:
+    
+
+
+def houseHolderDriver(m:Matrix)->List:
     '''
     Drives the houseHolderCalc function. Basically slices and constructs the matricies
     to form each transformation matrix and multiplies it with m for the next iteration.
     Continues until the slices make a 2x2 matrix (the smallest that is useful)
-
     Args:
         m: A matrix, a list of lists
     
     Returns:
-        Returns the transformed matrix from m. Will be upper-triangular.
+        Returns a list with the first entry being the transformed matrix from m. Will be upper-triangular.
+        The second entry will be the Q matrix, containing the orthogonal vectors that combine with R to form 
+        the input matrix.
     '''
     index = 2
     tempMatrix = []
-    firstIteration = matrix_matrix_mult(houseHolderCalc(m,0),m)
+    Q = houseHolderCalc(m,0)
+    firstIteration = matrix_matrix_mult(Q,m)
+    returnList = [0,0]
     while index < len(firstIteration):
         tempMatrix = makeSubMatrix(firstIteration)
         tempMatrix = houseHolderCalc(tempMatrix,0)
         reconstructed = reconstructMatrix(tempMatrix,m)
+        Q = matrix_matrix_mult(Q,reconstructed)
         firstIteration = matrix_matrix_mult(reconstructed,firstIteration)
-        index += 1 
-    return firstIteration
-
-
-matrixNotes = [[2,2,1],[-2,1,2],[1,3,1]]
-matrixTest = [[1,2],[3,4]]
-
-
-matrix1 = [[1,2,3],[4,5,6],[7,8,9]]
-matrix2OLD = [[6,8,4],[3,5,1],[7,2,9]]
-matrix2 = [[1,2,3],[4,5,6],[7,2,9]]
-matrix3 = [[4,5,6],[3,5,8],[2,4,1]]
-matrixCJ = [[1,2,3],[4,5,6]]
-test_vector_01 = [1, 2, 4]
-test_vector_02 = [3, 1, 2]
-test_vector_03 = [6,complex(3,2),7]
-n = 9
-
-class TestQR(unittest.TestCase):
-    
-    def test_projection(self):
-        self.assertAlmostEqual(projection(test_vector_01,test_vector_02),[13/21,26/21,52/21])
-
-    def test_addInverse(self):
-        addInverse(test_vector_01)
-        self.assertEqual(test_vector_01,[-1,-2,-4])
-
-    def test_createEmptyMatrix(self):
-        self.assertEqual(createEmptyMatrix(matrix1),[[0,0,0],[0,0,0],[0,0,0]])
-
-    def test_transpose(self):
-        self.assertEqual(transpose(matrix1),[[1,4,7],[2,5,8],[3,6,9]])
-
-    def test_orthoNormalizeVectors(self):
-        Q = orthoNormalizeVectors(matrix2)
-        SolutionQ = [[14**(.5)/14,14**(.5)/7,3*14**(.5)/14],\
-                [4*21**(.5)/21,21**(.5)/21,-2*21**(.5)/21],\
-                [6**(.5)/6,-1*6**(.5)/3,6**(.5)/6]]
-        for vector in range(len(Q)):
-            for item in range(len(Q[vector])):
-                self.assertAlmostEqual(Q[vector][item],SolutionQ[vector][item])
-
-    def test_GramSchmidtStable(self):
-        QR = GramSchmidtStable(matrix2)
-        SolutionQ = [[14**(.5)/14,14**(.5)/7,3*14**(.5)/14],\
-                [4*21**(.5)/21,21**(.5)/21,-2*21**(.5)/21],\
-                [6**(.5)/6,-1*6**(.5)/3,6**(.5)/6]]
-        SolutionR = [[14**(.5),0,0],[(16*14**(.5))/7,(3*21**(.5))/7,0],[(19*14**(.5))/7,(4*21**(.5))/7,2*6**(.5)]]
-        for vector in range(len(QR[0])):
-            for item in range(len(QR[0][vector])):
-                self.assertAlmostEqual(QR[0][vector][item],SolutionQ[vector][item])
-        for vector in range(len(QR[1])):
-            for item in range(len(QR[1][vector])):
-                self.assertAlmostEqual(QR[1][vector][item],SolutionR[vector][item])
-
-    def test_copyMatrix(self):
-        self.assertEqual(matrix1,copyMatrix(matrix1))
-
-    def test_makeColumn(self):
-        self.assertEqual(makeColumn(test_vector_01,0),[1,0,0])
-
-    def test_reconstructMatrix(self):
-        self.assertEqual(reconstructMatrix(matrixTest,matrix1),[[1,0,0],[0,1,2],[0,3,4]])
-
-    def test_makeIdentMatrix(self):
-        self.assertEqual(makeIdentMatrix(matrix1),[[1,0,0],[0,1,0],[0,0,1]])
-
-    def test_makeSubMatrix(self):
-        self.assertEqual(makeSubMatrix(matrix1),[[5,6],[8,9]])
-
-    def test_houseHolderCalc(self):
-        self.assertAlmostEqual(houseHolderCalc(matrixNotes,0),[[0.6666666666666667, 0.6666666666666666, 0.3333333333333333],\
-             [0.6666666666666666, -0.33333333333333326, -0.6666666666666666],\
-             [0.3333333333333333, -0.6666666666666666, 0.6666666666666667]])
-
-    def test_houseHolderDriver(self):
-        self.assertAlmostEqual(houseHolderDriver(matrixNotes),[[3.0000000000000004, -1.1102230246251564e-16, 1.1102230246251565e-16],\
-             [-2.220446049250313e-16, 3.0, 0.0], [3.0000000000000004, 0.9999999999999997, -1.0]])
+        index += 1
+    returnList[0] = firstIteration
+    returnList[1] = Q
+    return returnList
 
 
 
-if __name__ == '__main__':
-    unittest.main()
-    
+
+
+
