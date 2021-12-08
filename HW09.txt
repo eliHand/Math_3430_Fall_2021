@@ -1,0 +1,9 @@
+An advantage to using floating point numbers as compared to fixed point numbers is that
+the programmer need not deal with overflow issues nearly as often. If a number is fixed
+then at every stage of the program the programmer must be aware of how large a number is
+while if the number is floating, the range of error greater and so it does not come up as often.
+
+However an advantage of using fixed over floating point is that fixed point numbers are easier
+to fix in relation to truncation and rounding errors. While floating point tends to lose a lot of
+information on the end of their numbers, fixed point minimizes this and can even be countered to some
+degree.
