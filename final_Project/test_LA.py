@@ -65,3 +65,6 @@ class TestVectorOperations(unittest.TestCase):
     def test_innerProduct(self):
         self.assertEqual(innerProduct(test_vector_01,test_vector_02),13)
         self.assertEqual(innerProduct(test_vector_01,test_vector_03),complex(40,4))
+
+if __name__ == "__main__":
+    unittest.main()
